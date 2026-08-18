@@ -64,6 +64,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,6 +91,7 @@ fun BoxScope.ArrowButton(
             Modifier
                 .align(Alignment.Center)
                 .size(height = 62.dp, width = 62.dp),
+        testTag = if (isLeft) AutomationTags.NAV_BACK else AutomationTags.NAV_FORWARD,
         onClick = onClick,
     ) {
         Image(
@@ -144,6 +146,9 @@ fun ApprovalButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     approval: Boolean,
+    // Override the default approve/decline role tag where a screen shows more than
+    // one ApprovalButton at once (e.g. the selfie tutorial demo + its real dismiss).
+    testTag: String? = null,
 ) {
     val color = if (approval) AppButtonColors.ProgressGreen else AppButtonColors.DeclineRed
     val image =
@@ -153,6 +158,7 @@ fun ApprovalButton(
         modifier =
             modifier
                 .size(height = 60.dp, width = 60.dp),
+        testTag = testTag ?: if (approval) AutomationTags.APPROVE else AutomationTags.DECLINE,
         onClick = onClick,
     ) {
         Image(
@@ -172,6 +178,7 @@ fun InfoButton(
     TreeTrackerButton(
         modifier = modifier.size(60.dp),
         colors = AppButtonColors.WhiteLight,
+        testTag = AutomationTags.INFO,
         onClick = onClick,
         shape = TreeTrackerButtonShape.Circle,
         depth = 6f,
@@ -206,6 +213,7 @@ fun BoxScope.LanguageButton() {
             Modifier
                 .align(Alignment.Center)
                 .size(width = 100.dp, 60.dp),
+        testTag = AutomationTags.LANGUAGE_MENU,
         onClick = {
             navController.navigate(LanguageRoute())
         },
@@ -238,6 +246,7 @@ fun BoxScope.UserImageButton(
                     bottom = 10.dp,
                 ).aspectRatio(1.0f)
                 .clip(RoundedCornerShape(10.dp)),
+        testTag = AutomationTags.USER_IMAGE,
         onClick = onClick,
     ) {
         LocalImage(
@@ -264,6 +273,10 @@ fun TreeTrackerButton(
     shape: TreeTrackerButtonShape = TreeTrackerButtonShape.Rectangle,
     contentAlignment: Alignment = Alignment.Center,
     borderBrushOverride: Brush? = null,
+    // Stable automation id (see AutomationTags). Surfaced to UiAutomator2 as a
+    // resource-id via testTagsAsResourceId, set at each Activity root. Applied to
+    // the node that owns the tap so the e2e suite can select it by id.
+    testTag: String? = null,
     onClick: () -> Unit,
     content: @Composable (BoxScope.() -> Unit),
 ) {
@@ -280,6 +293,7 @@ fun TreeTrackerButton(
     BoxWithConstraints(
         modifier =
             modifier
+                .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
                 .apply {
                     if (shape == TreeTrackerButtonShape.Circle) {
                         aspectRatio(1f)
@@ -364,6 +378,7 @@ fun OrangeAddButton(
         onClick = onClick,
         shape = TreeTrackerButtonShape.Circle,
         colors = AppButtonColors.UploadOrange,
+        testTag = AutomationTags.ADD,
         modifier =
             modifier
                 .size(70.dp),
@@ -384,11 +399,13 @@ fun CaptureButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     isEnabled: Boolean,
+    testTag: String? = null,
 ) {
     TreeTrackerButton(
         modifier = modifier.size(70.dp),
         isEnabled = isEnabled,
         colors = AppButtonColors.ProgressGreen,
+        testTag = testTag,
         onClick = onClick,
         shape = TreeTrackerButtonShape.Circle,
         depth = 10f,

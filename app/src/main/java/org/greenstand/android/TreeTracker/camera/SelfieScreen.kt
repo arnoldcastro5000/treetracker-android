@@ -35,6 +35,7 @@ import org.greenstand.android.TreeTracker.root.LocalNavHostController
 import org.greenstand.android.TreeTracker.signup.SignupAction
 import org.greenstand.android.TreeTracker.signup.SignupViewModel
 import org.greenstand.android.TreeTracker.view.ActionBar
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.CaptureButton
 import org.greenstand.android.TreeTracker.view.InfoButton
 import org.greenstand.android.TreeTracker.view.SelfieTutorial
@@ -75,6 +76,7 @@ fun SelfieScreen() {
                             cameraControl.captureImage()
                         },
                         isEnabled = true,
+                        testTag = AutomationTags.CAPTURE_SELFIE,
                     )
                 },
             )

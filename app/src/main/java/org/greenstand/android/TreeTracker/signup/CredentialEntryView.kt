@@ -64,6 +64,7 @@ import org.greenstand.android.TreeTracker.view.AppButtonColors
 import org.greenstand.android.TreeTracker.view.AppColors
 import org.greenstand.android.TreeTracker.view.AppColors.Green
 import org.greenstand.android.TreeTracker.view.ArrowButton
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.BorderedTextField
 import org.greenstand.android.TreeTracker.view.CustomSnackbar
 import org.greenstand.android.TreeTracker.view.LanguageButton
@@ -258,6 +259,7 @@ private fun EmailTextField(
     val focusManager = LocalFocusManager.current
     BorderedTextField(
         value = state.email ?: "",
+        testTag = AutomationTags.INPUT_EMAIL,
         padding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 8.dp),
         onValueChange = { updatedEmail -> onUpdateEmail(updatedEmail) },
         placeholder = { Text(text = stringResource(id = R.string.email_placeholder), color = Color.White) },
@@ -303,6 +305,7 @@ private fun PhoneTextField(
     val focusManager = LocalFocusManager.current
     BorderedTextField(
         value = state.phone ?: "",
+        testTag = AutomationTags.INPUT_PHONE,
         padding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 8.dp),
         onValueChange = { updatedPhone -> onUpdatePhone(updatedPhone) },
         placeholder = { Text(text = stringResource(id = R.string.phone_placeholder), color = Color.White) },

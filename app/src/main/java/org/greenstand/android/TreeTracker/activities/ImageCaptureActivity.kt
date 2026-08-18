@@ -23,7 +23,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -61,6 +67,7 @@ class CaptureImageContract : ActivityResultContract<Boolean, String?>() {
 }
 
 class ImageCaptureActivity : ComponentActivity() {
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -72,11 +79,20 @@ class ImageCaptureActivity : ComponentActivity() {
                 LocalNavHostController provides navController,
             ) {
                 TreeTrackerTheme {
-                    NavHost(navController, startDestination = SelfieRoute) {
-                        trackedComposable<SelfieRoute> { SelfieScreen() }
-                        trackedComposable<ImageReviewRoute> {
-                            val route = it.toRoute<ImageReviewRoute>()
-                            ImageReviewScreen(route.photoPath)
+                    // Surface Modifier.testTag as a UiAutomator2 resource-id for
+                    // the selfie / image-review flow the e2e suite drives.
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .semantics { testTagsAsResourceId = true },
+                    ) {
+                        NavHost(navController, startDestination = SelfieRoute) {
+                            trackedComposable<SelfieRoute> { SelfieScreen() }
+                            trackedComposable<ImageReviewRoute> {
+                                val route = it.toRoute<ImageReviewRoute>()
+                                ImageReviewScreen(route.photoPath)
+                            }
                         }
                     }
                 }

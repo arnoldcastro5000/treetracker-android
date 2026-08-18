@@ -30,6 +30,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.focusRequester
@@ -51,6 +52,8 @@ fun BorderedTextField(
     onFocusChanged: ((FocusState) -> Unit) = {},
     focusRequester: FocusRequester = FocusRequester.Default,
     autofocusEnabled: Boolean = false,
+    // Stable automation id applied to the editable field (see AutomationTags).
+    testTag: String? = null,
 ) {
     Box(
         modifier =
@@ -64,6 +67,7 @@ fun BorderedTextField(
         TextField(
             modifier =
                 Modifier
+                    .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
                     .padding(8.dp)
                     .fillMaxSize()
                     .focusRequester(focusRequester)

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import org.greenstand.android.TreeTracker.R
 import org.greenstand.android.TreeTracker.view.ActionBar
 import org.greenstand.android.TreeTracker.view.ArrowButton
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.BorderedTextField
 import org.greenstand.android.TreeTracker.view.LanguageButton
 import org.greenstand.android.TreeTracker.view.TopBarTitle
@@ -99,6 +100,7 @@ fun NameEntryView(
         ) {
             BorderedTextField(
                 value = state.firstName ?: "",
+                testTag = AutomationTags.INPUT_FIRST_NAME,
                 padding = PaddingValues(4.dp),
                 onValueChange = { updatedName -> onHandleAction(SignupAction.UpdateFirstName(updatedName)) },
                 placeholder = { Text(text = stringResource(id = R.string.first_name_hint), color = Color.White) },
@@ -126,6 +128,7 @@ fun NameEntryView(
             Spacer(modifier = Modifier.height(8.dp))
             BorderedTextField(
                 value = state.lastName ?: "",
+                testTag = AutomationTags.INPUT_LAST_NAME,
                 padding = PaddingValues(4.dp),
                 onValueChange = { updatedName -> onHandleAction(SignupAction.UpdateLastName(updatedName)) },
                 placeholder = { Text(text = stringResource(id = R.string.last_name_hint), color = Color.White) },

@@ -20,7 +20,13 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.ExperimentalComposeApi
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import org.greenstand.android.TreeTracker.models.TreeTrackerViewModelFactory
 import org.greenstand.android.TreeTracker.root.Root
 import org.greenstand.android.TreeTracker.theme.CustomTheme
@@ -32,7 +38,7 @@ class TreeTrackerActivity : AppCompatActivity() {
     private val viewModelFactory: TreeTrackerViewModelFactory by inject()
     private val gpsUtils: GpsUtils by inject()
 
-    @OptIn(ExperimentalComposeApi::class)
+    @OptIn(ExperimentalComposeApi::class, ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,10 +55,20 @@ class TreeTrackerActivity : AppCompatActivity() {
 
         setContent {
             CustomTheme {
-                if (gpsUtils.hasGPSDevice()) {
-                    Root(viewModelFactory)
-                } else {
-                    NoGPSDeviceDialog(onPositiveClick = { finishAndRemoveTask() })
+                // Surface every Modifier.testTag in the tree to UiAutomator2 as a
+                // resource-id, so the e2e suite selects controls by stable id
+                // instead of screen coordinates.
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .semantics { testTagsAsResourceId = true },
+                ) {
+                    if (gpsUtils.hasGPSDevice()) {
+                        Root(viewModelFactory)
+                    } else {
+                        NoGPSDeviceDialog(onPositiveClick = { finishAndRemoveTask() })
+                    }
                 }
             }
         }

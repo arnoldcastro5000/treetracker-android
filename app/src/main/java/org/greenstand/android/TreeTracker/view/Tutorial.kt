@@ -275,6 +275,7 @@ fun TutorialDialog(
                             .align(Alignment.CenterHorizontally),
                     onClick = onCompleteClick,
                     approval = true,
+                    testTag = AutomationTags.TUTORIAL_DISMISS,
                 )
             }
         },

@@ -64,6 +64,7 @@ import org.greenstand.android.TreeTracker.view.ActionBar
 import org.greenstand.android.TreeTracker.view.AppButtonColors
 import org.greenstand.android.TreeTracker.view.AppColors
 import org.greenstand.android.TreeTracker.view.ArrowButton
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.CaptureButton
 import org.greenstand.android.TreeTracker.view.InfoButton
 import org.greenstand.android.TreeTracker.view.TreeCaptureTutorial
@@ -125,6 +126,7 @@ fun TreeCaptureScreen(
                             scope.launch { cameraControl.captureImage() }
                         },
                         isEnabled = !state.isGettingLocation,
+                        testTag = AutomationTags.CAPTURE_TREE,
                     )
                 },
                 rightAction = {

@@ -41,6 +41,7 @@ import org.greenstand.android.TreeTracker.theme.CustomTheme
 import org.greenstand.android.TreeTracker.view.ActionBar
 import org.greenstand.android.TreeTracker.view.AppButtonColors
 import org.greenstand.android.TreeTracker.view.ArrowButton
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.TopBarTitle
 import org.greenstand.android.TreeTracker.view.TreeTrackerButton
 
@@ -128,6 +129,7 @@ fun LanguageButton(
         colors = AppButtonColors.ProgressGreen,
         onClick = onClick,
         isSelected = isSelected,
+        testTag = AutomationTags.languageOption(text),
         modifier =
             Modifier
                 .padding(16.dp)
