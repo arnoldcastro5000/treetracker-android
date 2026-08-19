@@ -22,11 +22,13 @@ import android.content.Context
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.*
 import org.greenstand.android.TreeTracker.BuildConfig
 import timber.log.Timber
@@ -46,6 +48,23 @@ class ObjectStorageClient private constructor(
     init {
 
         val region = Regions.fromName(BuildConfig.OBJECT_STORAGE_IDENTITY_REGION)
+
+        if (BuildConfig.USE_STATIC_S3_CREDS) {
+            // Fully-local object storage (LocalStack / MinIO): authenticate with static
+            // credentials and talk to a custom endpoint, bypassing AWS Cognito entirely.
+            // Path-style access is required because a local endpoint has no per-bucket DNS.
+            val creds =
+                BasicAWSCredentials(
+                    BuildConfig.OBJECT_STORAGE_ACCESS_KEY,
+                    BuildConfig.OBJECT_STORAGE_SECRET_KEY,
+                )
+            val client = AmazonS3Client(creds)
+            client.setEndpoint(BuildConfig.OBJECT_STORAGE_ENDPOINT)
+            client.setS3ClientOptions(
+                S3ClientOptions.builder().setPathStyleAccess(true).build(),
+            )
+            s3Client = client
+        } else {
 
         val credentialsProvider =
             CognitoCachingCredentialsProvider(
@@ -98,6 +117,7 @@ class ObjectStorageClient private constructor(
             s3Client = AmazonS3Client(credentialsProvider)
             s3Client?.setEndpoint(String.format("https://%s/", BuildConfig.OBJECT_STORAGE_ENDPOINT))
         }
+        }
     }
 
     @SuppressLint("SimpleDateFormat")
@@ -118,7 +138,15 @@ class ObjectStorageClient private constructor(
         poRequest.withAccessControlList(acl)
         s3Client?.putObject(poRequest)
 
-        if (BuildConfig.USE_AWS_S3) {
+        if (BuildConfig.USE_STATIC_S3_CREDS) {
+            // Path-style URL against the local endpoint (which already includes the scheme).
+            return String.format(
+                "%s/%s/%s",
+                BuildConfig.OBJECT_STORAGE_ENDPOINT,
+                BuildConfig.OBJECT_STORAGE_BUCKET_IMAGES,
+                dosKey,
+            )
+        } else if (BuildConfig.USE_AWS_S3) {
             return String.format(
                 "https://%s.s3.%s.amazonaws.com/%s",
                 BuildConfig.OBJECT_STORAGE_BUCKET_IMAGES,

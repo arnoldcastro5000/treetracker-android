@@ -44,6 +44,13 @@ android {
         buildConfigField 'Boolean', 'BLUR_DETECTION_ENABLED', "false"
         buildConfigField 'Boolean', 'USE_AWS_S3', "false"
         buildConfigField 'Boolean', 'ORG_LINK', "false"
+        // Fully-local object storage (LocalStack / MinIO). When USE_STATIC_S3_CREDS is
+        // true the S3 client uses these static credentials + OBJECT_STORAGE_ENDPOINT and
+        // skips Cognito entirely, so no real AWS identity pool is needed. Declared here
+        // (default off / empty) so every variant compiles; only the `local` type turns it on.
+        buildConfigField 'Boolean', 'USE_STATIC_S3_CREDS', "false"
+        buildConfigField 'String', 'OBJECT_STORAGE_ACCESS_KEY', '""'
+        buildConfigField 'String', 'OBJECT_STORAGE_SECRET_KEY', '""'
 
 
     }
@@ -139,6 +146,25 @@ android {
             buildConfigField "String", "TREETRACKER_CLIENT_ID", "\"${dev_treetracker_client_id}\""
             buildConfigField "String", "TREETRACKER_CLIENT_SECRET", "\"${dev_treetracker_client_secret}\""
 
+        }
+
+        // Fully-local build: object storage and API gateway both point at services on the
+        // emulator host (10.0.2.2 is the Android emulator alias for the host loopback), and
+        // S3 uses static credentials against a local LocalStack/MinIO endpoint instead of a
+        // real AWS Cognito identity pool. No real AWS or secret is needed; the access keys
+        // are placeholders LocalStack ignores. See ObjectStorageClient.kt (USE_STATIC_S3_CREDS).
+        local {
+            initWith(debug)
+            applicationIdSuffix ".local"
+            resValue "string", "app_name", "Tree Tracker(local)"
+            buildConfigField 'Boolean', 'USE_AWS_S3', "false"
+            buildConfigField 'Boolean', 'USE_STATIC_S3_CREDS', "true"
+            buildConfigField 'String', 'OBJECT_STORAGE_ENDPOINT', '"http://10.0.2.2:4566"'
+            buildConfigField 'String', 'OBJECT_STORAGE_ACCESS_KEY', '"local"'
+            buildConfigField 'String', 'OBJECT_STORAGE_SECRET_KEY', '"local"'
+            buildConfigField 'String', 'OBJECT_STORAGE_BUCKET_IMAGES', '"treetracker-local-images"'
+            buildConfigField 'String', 'OBJECT_STORAGE_BUCKET_BATCH_UPLOADS', '"treetracker-local-batch-uploads"'
+            buildConfigField 'String', 'API_GATEWAY', '"http://10.0.2.2:8088"'
         }
     }
 
