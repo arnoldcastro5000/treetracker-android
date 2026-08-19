@@ -34,9 +34,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -241,6 +244,7 @@ fun TreeCaptureReview() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TutorialDialog(
     content:
@@ -253,6 +257,10 @@ fun TutorialDialog(
         title = null,
         modifier =
             Modifier
+                // An AlertDialog renders in its own window, so it does not inherit the
+                // Activity root's testTagsAsResourceId. Re-enable it here so the dismiss
+                // button's testTag surfaces as a resource-id for automation.
+                .semantics { testTagsAsResourceId = true }
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .alpha(0.8f)
