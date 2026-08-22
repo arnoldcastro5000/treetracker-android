@@ -58,6 +58,9 @@ fun Camera(
                 // to feed the bundled test image through onImageCaptured, and skip camera setup.
                 // Test-only: release/prerelease/dev/debug keep the live camera below.
                 if (BuildConfig.BUILD_TYPE == "local") {
+                    Timber
+                        .tag("CameraXApp")
+                        .d("Camera factory .local branch: wiring capture bypass (isSelfie=$isSelfieMode)")
                     cameraControl.captureListener = {
                         val testFile = ImageUtils.createTestImageFile(context)
                         ImageUtils.resizeImage(
@@ -191,6 +194,7 @@ class CameraControl {
     var imageScaleHeight: Int = 1920
 
     fun captureImage() {
+        Timber.tag("CameraXApp").d("captureImage() called; listener set=${captureListener != null}")
         captureListener?.invoke()
     }
 }
