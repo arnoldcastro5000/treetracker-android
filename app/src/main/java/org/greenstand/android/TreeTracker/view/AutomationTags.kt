@@ -51,6 +51,10 @@ object AutomationTags {
     const val ADD = "add"
     const val USER_IMAGE = "user-image"
 
+    // Dashboard counters (read by the e2e suite to assert upload progress)
+    const val UPLOADED_COUNT = "uploaded-count"
+    const val REMAINING_COUNT = "ready-to-upload-count"
+
     /** Per-language selection row, e.g. "language-option-english". */
     fun languageOption(name: String): String = "language-option-" + name.lowercase().replace(" ", "-")
 }

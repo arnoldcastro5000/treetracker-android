@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +82,7 @@ import org.greenstand.android.TreeTracker.view.ActionBar
 import org.greenstand.android.TreeTracker.view.AppButtonColors
 import org.greenstand.android.TreeTracker.view.AppColors
 import org.greenstand.android.TreeTracker.view.AppColors.Green
+import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.greenstand.android.TreeTracker.view.ConsumableSnackBar
 import org.greenstand.android.TreeTracker.view.LanguageButton
 import org.greenstand.android.TreeTracker.view.TopBarTitle
@@ -194,7 +196,7 @@ fun Dashboard(
                             .size(width = 30.dp, height = 30.dp),
                 )
                 Text(
-                    modifier = Modifier.align(CenterVertically),
+                    modifier = Modifier.align(CenterVertically).testTag(AutomationTags.UPLOADED_COUNT),
                     text = state.treesSynced.toString(),
                     fontWeight = FontWeight.Bold,
                     color = CustomTheme.textColors.uploadText,
@@ -226,7 +228,7 @@ fun Dashboard(
                     )
                     Text(
                         text = (state.treesRemainingToSync).toString(),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).testTag(AutomationTags.REMAINING_COUNT),
                         color = CustomTheme.textColors.lightText,
                         style = CustomTheme.typography.medium,
                     )
