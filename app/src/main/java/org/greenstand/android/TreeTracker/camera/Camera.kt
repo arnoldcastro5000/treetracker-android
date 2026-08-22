@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import org.greenstand.android.TreeTracker.BuildConfig
 import org.greenstand.android.TreeTracker.utilities.ImageUtils
 import timber.log.Timber
 import java.io.File
@@ -92,7 +93,27 @@ fun Camera(
                                 .build()
                         }
 
-                    cameraControl.captureListener = {
+                    cameraControl.captureListener = capture@{
+                        // CI/e2e capture bypass: CameraX ImageCapture.takePicture is a no-op on the
+                        // headless emulator (its OnImageSavedCallback never fires), so the .local build
+                        // feeds the bundled test image through the SAME post-processing + callback the
+                        // real path uses, instead of the live camera. Test-only: gated on the .local
+                        // variant; release/prerelease/dev/debug are unchanged.
+                        if (BuildConfig.BUILD_TYPE == "local") {
+                            val testFile = ImageUtils.createTestImageFile(context)
+                            ImageUtils.resizeImage(
+                                path = testFile.absolutePath,
+                                forceScaling = cameraControl.isImageScalingEnabled,
+                                targetHeight = cameraControl.imageScaleHeight,
+                            )
+                            ImageUtils.orientImage(testFile.absolutePath)
+                            Timber
+                                .tag("CameraXApp")
+                                .d("Photo capture bypassed (.local): ${testFile.absolutePath}")
+                            onImageCaptured(testFile)
+                            return@capture
+                        }
+
                         val file = ImageUtils.createImageFile(context)
 
                         val metadata =
