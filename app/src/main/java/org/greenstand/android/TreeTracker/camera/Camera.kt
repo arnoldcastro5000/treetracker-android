@@ -57,7 +57,12 @@ fun Camera(
                 // .local build wire the capture action HERE, independent of the camera provider/bind,
                 // to feed the bundled test image through onImageCaptured, and skip camera setup.
                 // Test-only: release/prerelease/dev/debug keep the live camera below.
-                if (BuildConfig.BUILD_TYPE == "local") {
+                // E2E experiment: run the REAL CameraX path for the TREE (back lens) when
+                // `debug.e2e.realtree` == "1", to probe whether virtualscene + poster capture
+                // works on a newer emulator image. The selfie (front lens) always keeps the
+                // bypass - virtualscene is back-lens only.
+                val useRealTreeCamera = !isSelfieMode && isRealTreeCameraRequested()
+                if (BuildConfig.BUILD_TYPE == "local" && !useRealTreeCamera) {
                     Timber
                         .tag("CameraXApp")
                         .d("Camera factory .local branch: wiring capture bypass (isSelfie=$isSelfieMode)")
@@ -75,6 +80,11 @@ fun Camera(
                         onImageCaptured(testFile)
                     }
                     return@also
+                }
+                if (useRealTreeCamera) {
+                    Timber
+                        .tag("CameraXApp")
+                        .d("Camera factory: REAL camera path (E2E experiment; tree bypass skipped, isSelfie=$isSelfieMode)")
                 }
                 previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(previewView.context)
@@ -171,13 +181,22 @@ fun Camera(
                                 },
                             ).build()
 
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        imageCapture,
-                        preview,
-                    )
+                    try {
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            imageCapture,
+                            preview,
+                        )
+                        Timber
+                            .tag("CameraXApp")
+                            .d("bindToLifecycle OK (isSelfie=$isSelfieMode)")
+                    } catch (e: Exception) {
+                        Timber
+                            .tag("CameraXApp")
+                            .e(e, "bindToLifecycle FAILED (isSelfie=$isSelfieMode)")
+                    }
 
                     preview.setSurfaceProvider(previewView.surfaceProvider)
                 }, ContextCompat.getMainExecutor(previewView.context))
@@ -185,6 +204,23 @@ fun Camera(
         },
     )
 }
+
+// E2E experiment switch: when the system prop `debug.e2e.realtree` == "1", the .local
+// build runs the REAL CameraX capture path for the tree (back lens) instead of the
+// bundled-image bypass, so CI can probe whether virtualscene + poster capture works on a
+// newer emulator image. Set via `adb shell setprop debug.e2e.realtree 1`. Reads the prop
+// via `getprop` (no hidden-API dependency); defaults to false on any error.
+private fun isRealTreeCameraRequested(): Boolean =
+    try {
+        Runtime
+            .getRuntime()
+            .exec(arrayOf("getprop", "debug.e2e.realtree"))
+            .inputStream
+            .bufferedReader()
+            .use { it.readText().trim() == "1" }
+    } catch (e: Exception) {
+        false
+    }
 
 class CameraControl {
     var captureListener: (() -> Unit)? = null
