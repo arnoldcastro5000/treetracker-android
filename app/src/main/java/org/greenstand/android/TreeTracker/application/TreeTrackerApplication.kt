@@ -20,6 +20,7 @@ import android.content.Context
 import androidx.multidex.MultiDex
 import org.greenstand.android.TreeTracker.analytics.ExceptionLogger
 import org.greenstand.android.TreeTracker.api.ObjectStorageClient
+import org.greenstand.android.TreeTracker.BuildConfig
 import org.greenstand.android.TreeTracker.di.appModule
 import org.greenstand.android.TreeTracker.di.networkModule
 import org.greenstand.android.TreeTracker.di.roomModule
@@ -50,7 +51,10 @@ class TreeTrackerApplication : Application() {
             )
         }
 
-        if (FeatureFlags.DEBUG_ENABLED) {
+        // Plant DebugTree for the .local e2e build too (logging only, no behaviour change):
+        // .local is not DEBUG_ENABLED, so without this its Timber logs never reach logcat,
+        // which blinds CI capture-flow diagnostics.
+        if (FeatureFlags.DEBUG_ENABLED || BuildConfig.BUILD_TYPE == "local") {
             Timber.plant(Timber.DebugTree())
         } else {
             Timber.plant(ExceptionLogger())
