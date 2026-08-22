@@ -50,6 +50,29 @@ fun Camera(
         modifier = modifier,
         factory = { context ->
             PreviewView(context).also { previewView ->
+                // CI/e2e capture path (.local only): CameraX is unreliable on the headless
+                // emulator - the camera often never binds, so captureListener (assigned inside the
+                // provider callback below) stays null and the always-enabled shutter is a no-op;
+                // and even when bound, ImageCapture.takePicture never fires its callback. So in the
+                // .local build wire the capture action HERE, independent of the camera provider/bind,
+                // to feed the bundled test image through onImageCaptured, and skip camera setup.
+                // Test-only: release/prerelease/dev/debug keep the live camera below.
+                if (BuildConfig.BUILD_TYPE == "local") {
+                    cameraControl.captureListener = {
+                        val testFile = ImageUtils.createTestImageFile(context)
+                        ImageUtils.resizeImage(
+                            path = testFile.absolutePath,
+                            forceScaling = cameraControl.isImageScalingEnabled,
+                            targetHeight = cameraControl.imageScaleHeight,
+                        )
+                        ImageUtils.orientImage(testFile.absolutePath)
+                        Timber
+                            .tag("CameraXApp")
+                            .d("Photo capture bypassed (.local): ${testFile.absolutePath}")
+                        onImageCaptured(testFile)
+                    }
+                    return@also
+                }
                 previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(previewView.context)
 
@@ -93,27 +116,7 @@ fun Camera(
                                 .build()
                         }
 
-                    cameraControl.captureListener = capture@{
-                        // CI/e2e capture bypass: CameraX ImageCapture.takePicture is a no-op on the
-                        // headless emulator (its OnImageSavedCallback never fires), so the .local build
-                        // feeds the bundled test image through the SAME post-processing + callback the
-                        // real path uses, instead of the live camera. Test-only: gated on the .local
-                        // variant; release/prerelease/dev/debug are unchanged.
-                        if (BuildConfig.BUILD_TYPE == "local") {
-                            val testFile = ImageUtils.createTestImageFile(context)
-                            ImageUtils.resizeImage(
-                                path = testFile.absolutePath,
-                                forceScaling = cameraControl.isImageScalingEnabled,
-                                targetHeight = cameraControl.imageScaleHeight,
-                            )
-                            ImageUtils.orientImage(testFile.absolutePath)
-                            Timber
-                                .tag("CameraXApp")
-                                .d("Photo capture bypassed (.local): ${testFile.absolutePath}")
-                            onImageCaptured(testFile)
-                            return@capture
-                        }
-
+                    cameraControl.captureListener = {
                         val file = ImageUtils.createImageFile(context)
 
                         val metadata =
