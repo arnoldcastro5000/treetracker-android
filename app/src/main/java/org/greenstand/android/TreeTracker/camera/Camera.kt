@@ -62,7 +62,13 @@ fun Camera(
                         .tag("CameraXApp")
                         .d("Camera factory .local branch: wiring capture bypass (isSelfie=$isSelfieMode)")
                     cameraControl.captureListener = {
-                        val testFile = ImageUtils.createTestImageFile(context)
+                        // Distinct bundled placeholder per lens so the selfie (front) and the
+                        // tree (back) are not byte-identical: the selfie uses a portrait avatar
+                        // asset, the tree keeps the field photo. resizeImage re-encodes both to
+                        // JPEG, so the PNG selfie asset still uploads as a valid JPEG.
+                        val testAsset =
+                            if (isSelfieMode) "testselfieimage.png" else "testtreeimage.jpg"
+                        val testFile = ImageUtils.createTestImageFile(context, testAsset)
                         ImageUtils.resizeImage(
                             path = testFile.absolutePath,
                             forceScaling = cameraControl.isImageScalingEnabled,
