@@ -35,6 +35,7 @@ This is the primary documentation system for the repository.
 ## Testing
 
 - [Testing](testing/testing.md)
+- [Run the Compose UI tests](testing/running-compose-ui-tests.md)
 - [App Distribution Testing](testing/app-distribution-testing.md)
 
 ## Release
