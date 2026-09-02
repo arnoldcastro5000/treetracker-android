@@ -187,6 +187,11 @@ android {
     }
     namespace 'org.greenstand.android.TreeTracker'
 
+    // Instrumentation (androidTest) runs against the `.local` variant so the committed
+    // camera bypass (Camera.kt) feeds bundled test assets instead of the (headless) emulator
+    // camera. See MONO/.scratch/volunteer-e2e-ci/issues/40 + research/1243-instrumentation-test-best-practices.md.
+    testBuildType "local"
+
     // includeAndroidResources is only needed for screenshot tests (Compose theme loads
     // fonts from R.font.*). Enabling it globally causes Robolectric to fully initialize
     // TreeTrackerApplication, which starts Koin and breaks existing unit tests.
@@ -326,12 +331,21 @@ dependencies {
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.turbine
+    // Compose UI-flow instrumentation tests (issue #1243). ui-test-junit4 is also wired as a
+    // testImplementation above for Roborazzi; it must ALSO be on androidTest for on-device tests.
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.test.rules
     testImplementation libs.turbine
 
     // Screenshot testing
     testImplementation libs.bundles.roborazzi
     testImplementation libs.androidx.compose.ui.test.junit4
     debugImplementation libs.androidx.compose.ui.test.manifest
+    // androidTest runs on the `local` build type (testBuildType above); `local` does NOT inherit
+    // `debugImplementation`, so the ComponentActivity that createComposeRule() launches must be
+    // provided on the local variant too. Without this the instrumentation tests fail at launch.
+    localImplementation libs.androidx.compose.ui.test.manifest
 }
 
 configurations.all {

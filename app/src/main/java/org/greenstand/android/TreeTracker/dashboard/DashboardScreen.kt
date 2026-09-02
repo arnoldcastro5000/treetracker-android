@@ -239,7 +239,8 @@ fun Dashboard(
                         Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .weight(1f),
+                            .weight(1f)
+                            .testTag(AutomationTags.DASHBOARD_SYNC),
                     text = stringResource(R.string.upload),
                     colors = AppButtonColors.UploadOrange,
                     onClick = onSyncClicked,

@@ -55,6 +55,9 @@ object AutomationTags {
     const val UPLOADED_COUNT = "uploaded-count"
     const val REMAINING_COUNT = "ready-to-upload-count"
 
+    // Dashboard actions
+    const val DASHBOARD_SYNC = "dashboard-sync"
+
     /** Per-language selection row, e.g. "language-option-english". */
     fun languageOption(name: String): String = "language-option-" + name.lowercase().replace(" ", "-")
 }
