@@ -107,17 +107,7 @@ class DashboardViewModelTest {
         coEvery { orgRepo.getOrgs() } returns FakeFileGenerator.fakeOrganizationList
         coEvery { messagesRepo.checkForUnreadMessages() } returns false
         every { workManager.enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>()) } returns mockk()
-        testSubject =
-            DashboardViewModel(
-                dao = dao,
-                workManager = workManager,
-                analytics = analytics,
-                treesToSyncHelper = treesToSyncHelper,
-                orgRepo = orgRepo,
-                messagesRepo = messagesRepo,
-                checkForInternetUseCase = checkForInternetUseCase,
-                locationDataCapturer = locationDataCapturer,
-            )
+        testSubject = viewModelWith(workManager)
     }
 
     @Test
