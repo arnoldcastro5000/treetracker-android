@@ -15,9 +15,19 @@
  */
 package org.greenstand.android.TreeTracker.dashboard
 
+import android.content.Context
+import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.test.core.app.ApplicationProvider
+import androidx.work.Configuration
+import androidx.work.ListenableWorker
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerFactory
+import androidx.work.WorkerParameters
+import androidx.work.testing.SynchronousExecutor
+import androidx.work.testing.WorkManagerTestInitHelper
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -31,6 +41,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.greenstand.android.TreeTracker.MainCoroutineRule
 import org.greenstand.android.TreeTracker.analytics.Analytics
+import org.greenstand.android.TreeTracker.background.NotificationConstants
+import org.greenstand.android.TreeTracker.background.TreeSyncWorker
 import org.greenstand.android.TreeTracker.database.TreeTrackerDAO
 import org.greenstand.android.TreeTracker.models.location.LocationDataCapturer
 import org.greenstand.android.TreeTracker.models.messages.MessagesRepo
@@ -38,6 +50,7 @@ import org.greenstand.android.TreeTracker.models.organization.OrgRepo
 import org.greenstand.android.TreeTracker.usecases.CheckForInternetUseCase
 import org.greenstand.android.TreeTracker.utils.FakeFileGenerator
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -140,4 +153,75 @@ class DashboardViewModelTest {
             coVerify(exactly = 1) { workManager.enqueueUniqueWork(any(), any(), any<OneTimeWorkRequest>()) }
             coVerify { analytics.syncButtonTapped(any(), any(), any()) }
         }
+
+    // The tests above assert the enqueue against a MOCKED WorkManager (a method call with any() args).
+    // The tests below assert it against a REAL in-memory WorkManager (WorkManagerTestInitHelper), so
+    // they verify the actual request shape: the correct unique-work name and the TreeSyncWorker class.
+    // A no-op WorkerFactory replaces TreeSyncWorker so its real Koin upload never runs (the true upload
+    // is covered cross-process by the Appium full-stack E2E). See MONO/.scratch/volunteer-e2e-ci/issues/45.
+
+    @Test
+    fun `sync enqueues unique TreeSyncWorker work when there are trees to sync`() =
+        runTest {
+            val realWorkManager = realTestWorkManager()
+            val viewModel = viewModelWith(realWorkManager)
+
+            viewModel.handleAction(DashboardAction.Sync)
+
+            val infos = realWorkManager.getWorkInfosForUniqueWork(NotificationConstants.UNIQUE_WORK_ID).get()
+            assertEquals(1, infos.size)
+            assertTrue(
+                "the enqueued unique work must be a TreeSyncWorker",
+                infos.first().tags.contains(TreeSyncWorker::class.java.name),
+            )
+        }
+
+    @Test
+    fun `sync does not enqueue work when there are no trees to sync`() =
+        runTest {
+            coEvery { treesToSyncHelper.getTreeCountToSync() } returns 0
+            val realWorkManager = realTestWorkManager()
+            val viewModel = viewModelWith(realWorkManager)
+
+            viewModel.handleAction(DashboardAction.Sync)
+
+            val infos = realWorkManager.getWorkInfosForUniqueWork(NotificationConstants.UNIQUE_WORK_ID).get()
+            assertTrue("no sync work must be enqueued when there is nothing to sync", infos.isEmpty())
+        }
+
+    private fun viewModelWith(workManager: WorkManager): DashboardViewModel =
+        DashboardViewModel(
+            dao = dao,
+            workManager = workManager,
+            analytics = analytics,
+            treesToSyncHelper = treesToSyncHelper,
+            orgRepo = orgRepo,
+            messagesRepo = messagesRepo,
+            checkForInternetUseCase = checkForInternetUseCase,
+            locationDataCapturer = locationDataCapturer,
+        )
+
+    private fun realTestWorkManager(): WorkManager {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val config =
+            Configuration.Builder()
+                .setMinimumLoggingLevel(Log.DEBUG)
+                .setExecutor(SynchronousExecutor())
+                .setWorkerFactory(NoOpWorkerFactory())
+                .build()
+        WorkManagerTestInitHelper.initializeTestWorkManager(context, config)
+        return WorkManager.getInstance(context)
+    }
+
+    /** Returns a trivial worker for any class, so the real TreeSyncWorker (Koin upload) never runs. */
+    private class NoOpWorkerFactory : WorkerFactory() {
+        override fun createWorker(
+            appContext: Context,
+            workerClassName: String,
+            workerParameters: WorkerParameters,
+        ): ListenableWorker =
+            object : Worker(appContext, workerParameters) {
+                override fun doWork(): Result = Result.success()
+            }
+    }
 }

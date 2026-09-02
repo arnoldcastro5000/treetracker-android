@@ -328,6 +328,9 @@ dependencies {
     testImplementation libs.androidx.room.testing
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.androidx.arch.core.testing
+    // WorkManagerTestInitHelper: assert the sync ENQUEUE against a real in-memory WorkManager
+    // (unique-work name + worker class), not just a mock method call. Runs under Robolectric.
+    testImplementation libs.androidx.work.testing
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.turbine
