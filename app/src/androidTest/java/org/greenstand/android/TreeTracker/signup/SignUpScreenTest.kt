@@ -21,7 +21,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.greenstand.android.TreeTracker.theme.CustomTheme
+import org.greenstand.android.TreeTracker.support.HermeticScreen
 import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -48,7 +48,7 @@ class SignUpScreenTest {
     @Test
     fun name_entry_dispatches_first_name_update_and_forward_launches_camera() {
         composeRule.setContent {
-            CustomTheme {
+            HermeticScreen {
                 NameEntryView(
                     state = SignUpState(isCredentialView = false),
                     onHandleAction = { actions.add(it) },
@@ -70,7 +70,7 @@ class SignUpScreenTest {
     @Test
     fun credential_entry_email_dispatches_email_update() {
         composeRule.setContent {
-            CustomTheme {
+            HermeticScreen {
                 CredentialEntryView(
                     state = SignUpState(credential = Credential.Email(), showPrivacyDialog = false),
                     onHandleAction = { actions.add(it) },
@@ -85,7 +85,7 @@ class SignUpScreenTest {
     @Test
     fun approving_the_privacy_dialog_dispatches_close() {
         composeRule.setContent {
-            CustomTheme {
+            HermeticScreen {
                 CredentialEntryView(
                     state = SignUpState(showPrivacyDialog = true),
                     onHandleAction = { actions.add(it) },

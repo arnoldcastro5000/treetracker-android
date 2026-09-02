@@ -21,7 +21,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.greenstand.android.TreeTracker.theme.CustomTheme
+import org.greenstand.android.TreeTracker.support.HermeticScreen
 import org.greenstand.android.TreeTracker.view.AutomationTags
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -45,7 +45,7 @@ class DashboardScreenTest {
     @Test
     fun dashboard_displays_synced_and_remaining_counts() {
         composeRule.setContent {
-            CustomTheme {
+            HermeticScreen {
                 Dashboard(state = DashboardState(treesSynced = 5, treesRemainingToSync = 3, totalTreesToSync = 8))
             }
         }
@@ -58,7 +58,7 @@ class DashboardScreenTest {
     fun tapping_sync_triggers_the_sync_callback() {
         var syncClicked = false
         composeRule.setContent {
-            CustomTheme {
+            HermeticScreen {
                 Dashboard(
                     state = DashboardState(treesSynced = 0, treesRemainingToSync = 2, totalTreesToSync = 2),
                     onSyncClicked = { syncClicked = true },
